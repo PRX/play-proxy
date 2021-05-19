@@ -22,6 +22,10 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
     let fake_url = format!("http://example.com{}", request_path);
     let fake_url_str: &str = &*fake_url;
 
+    if request_path == "/" {
+        return Ok(Response::new(Body::from("OK")));
+    }
+
     let request_url = match Url::parse(fake_url_str) {
         Ok(u) => u,
         Err(_) => {
@@ -97,6 +101,7 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
         return Ok(Response::builder()
             .status(200)
             .header("Cache-Control", "public, max-age=90")
+            .header("Server", "play-proxy/hyper")
             .body(res.into_body())
             .unwrap());
     } else {
