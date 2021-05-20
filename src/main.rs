@@ -75,8 +75,9 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
 
         let res = match client.request(req).await {
             Ok(r) => r,
-            Err(_) =>  {
+            Err(err) =>  {
                 println!("Bad origin request: {}", fake_url_str);
+                println!("{}", err);
                 return Ok(response500);
             },
         };
@@ -92,8 +93,9 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
 
         let res = match client.request(req).await {
             Ok(r) => r,
-            Err(_) =>  {
+            Err(err) =>  {
                 println!("Bad origin request: {}", fake_url_str);
+                println!("{}", err);
                 return Ok(response500);
             },
         };
