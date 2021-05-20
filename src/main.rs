@@ -14,7 +14,7 @@ extern crate pretty_env_logger;
 
 async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
     let response500 = Response::builder()
-        .status(200)
+        .status(500)
         .body(Body::from("Proxy request failed"))
         .unwrap();
 
