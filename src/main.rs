@@ -5,10 +5,8 @@ use std::convert::Infallible;
 use std::collections::HashMap;
 use url::Url;
 
-use hyper::Client;
-use hyper_tls::HttpsConnector;
 use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Request, Response, Server, Method};
+use hyper::{Body, Request, Response, Server};
 
 extern crate pretty_env_logger;
 
@@ -45,35 +43,15 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
         }
     };
 
-    let parsed_feed_url = match feed_url.parse::<hyper::Uri>() {
-        Ok(u) => u,
-        Err(_) => {
-            println!("URL not parsed: {}", fake_url_str);
-            return Ok(response500);
-        },
-    };
-
-    let scheme = match parsed_feed_url.scheme_str() {
-        Some(s) => s,
-        None => {
-            println!("Feed URL missing scheme: {}", fake_url_str);
-            return Ok(response500);
-        },
-    };
-
-    let req = Request::builder()
-        .method(Method::GET)
-        .uri(feed_url)
-        .header("User-Agent", "play.prx.org feed proxy")
-        .header("Accept", "application/rss+xml,application/rdf+xml;q=0.8,application/atom+xml;q=0.6,application/xml;q=0.4,text/xml;q=0.4")
-        .body(Body::from("")).unwrap();
-
     println!("URL: {}", feed_url);
 
-    if scheme == "http" {
-        let client = Client::new();
-
-        let res = match client.request(req).await {
+    let client = reqwest::Client::new();
+    let res = match client
+        .get(feed_url)
+        .header("User-Agent", "play.prx.org feed proxy")
+        .header("Accept", "application/rss+xml,application/rdf+xml;q=0.8,application/atom+xml;q=0.6,application/xml;q=0.4,text/xml;q=0.4")
+        .send()
+        .await {
             Ok(r) => r,
             Err(err) =>  {
                 println!("Bad origin request: {}", fake_url_str);
@@ -82,33 +60,23 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
             },
         };
 
-        return Ok(Response::builder()
-            .status(200)
-            .header("Cache-Control", "public, max-age=90")
-            .body(res.into_body())
-            .unwrap());
-    } else if scheme == "https" {
-        let https = HttpsConnector::new();
-        let client = Client::builder().build::<_, hyper::Body>(https);
-
-        let res = match client.request(req).await {
+    let content = match res
+        .text()
+        .await {
             Ok(r) => r,
             Err(err) =>  {
-                println!("Bad origin request: {}", fake_url_str);
+                println!("Invalid origin content: {}", fake_url_str);
                 println!("{}", err);
                 return Ok(response500);
             },
         };
 
-        return Ok(Response::builder()
-            .status(200)
-            .header("Cache-Control", "public, max-age=90")
-            .header("Server", "play-proxy/hyper")
-            .body(res.into_body())
-            .unwrap());
-    } else {
-        return Ok(response500);
-    };
+    return Ok(Response::builder()
+        .status(200)
+        .header("Cache-Control", "public, max-age=90")
+        .header("Server", "play-proxy/hyper")
+        .body(Body::from(content))
+        .unwrap());
 }
 
 #[tokio::main]
