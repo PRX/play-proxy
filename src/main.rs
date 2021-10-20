@@ -11,19 +11,25 @@ use hyper::{Body, Request, Response, Server};
 extern crate pretty_env_logger;
 
 async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
+    // A reusable response for returning 500 errors
     let response500 = Response::builder()
         .status(500)
         .body(Body::from("Proxy request failed"))
         .unwrap();
 
+    // The incoming request path, including the query string
     let request_path = request.uri().to_string();
+
+    // Create a complete URL with the request path, using an arbitrary domain
     let fake_url = format!("http://example.com{}", request_path);
     let fake_url_str: &str = &*fake_url;
 
+    // If the path is empty, do nothing
     if request_path == "/" {
         return Ok(Response::new(Body::from("OK")));
     }
 
+    // Parse the full URL
     let request_url = match Url::parse(fake_url_str) {
         Ok(u) => u,
         Err(_) => {
@@ -32,9 +38,12 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
         },
     };
 
+    // Construct a map of the query string key-values
     let params = request_url.query_pairs();
     let hash_query: HashMap<_, _> = params.into_owned().collect();
 
+    // Extract the `url` query parameter, which should be the complete feed
+    // URL needing to be proxied
     let feed_url = match hash_query.get("url") {
         Some(u) => u,
         None => {
@@ -45,6 +54,7 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
 
     println!("URL: {}", feed_url);
 
+    // GET the feed with a reqwest client
     let client = reqwest::Client::new();
     let res = match client
         .get(feed_url)
@@ -60,6 +70,7 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
             },
         };
 
+    // Get the response body from the feed request
     let content = match res
         .text()
         .await {
@@ -71,6 +82,7 @@ async fn proxy(request: Request<Body>) -> Result<Response<Body>, Infallible> {
             },
         };
 
+    // Return the feed response as the proxied response
     return Ok(Response::builder()
         .status(200)
         .header("Cache-Control", "public, max-age=90")
