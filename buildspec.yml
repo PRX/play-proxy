@@ -18,6 +18,7 @@ phases:
       - echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
   build:
     commands:
+      - ls -al
       - "cd $(ls -d */|head -n 1)"
       - "docker build ."
   post_build:
