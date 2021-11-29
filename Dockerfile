@@ -2,7 +2,6 @@ FROM ekidd/rust-musl-builder:stable as builder
 ADD --chown=rust:rust . ./
 RUN cargo build --release
 
-
 FROM alpine:latest
 LABEL org.prx.app="yes"
 EXPOSE 3000
