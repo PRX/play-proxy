@@ -1,24 +1,23 @@
 version: 0.2
 env:
   variables:
-    PRX_ECR_CONFIG_PARAMETERS: "PlayProxyEcrImageTag"
+    PRX_ECR_CONFIG_PARAMETERS: PlayProxyEcrImageTag
+    PRX_SPIRE_SSM_PARAMETERS_ECR_TAG: /prx/stag/Spire/Dovetail-Play/proxy/ecr-image-tag
   parameter-store:
-    DOCKERHUB_USERNAME: "/prx/DOCKERHUB_USERNAME"
-    DOCKERHUB_PASSWORD: "/prx/DOCKERHUB_PASSWORD"
+    DOCKERHUB_USERNAME: /prx/DOCKERHUB_USERNAME
+    DOCKERHUB_PASSWORD: /prx/DOCKERHUB_PASSWORD
   exported-variables:
     - PRX_ECR_CONFIG_PARAMETERS
+    - PRX_SPIRE_SSM_PARAMETERS_ECR_TAG
     - PRX_ECR_IMAGE
 phases:
-  install:
-    runtime-versions:
-      docker: 18
   pre_build:
     commands:
       - echo Logging in to Docker Hub...
       - echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
   build:
     commands:
-      - "docker build ."
+      - docker build .
   post_build:
     commands:
       - 'curl -sO "https://raw.githubusercontent.com/PRX/Infrastructure/master/ci/utility/post_build.sh" && chmod +x post_build.sh && . ./post_build.sh'
