@@ -1,13 +1,11 @@
 version: 0.2
 env:
   variables:
-    PRX_ECR_CONFIG_PARAMETERS: PlayProxyEcrImageTag
     PRX_SPIRE_SSM_PARAMETERS_ECR_TAG: /prx/stag/Spire/Dovetail-Play/proxy/ecr-image-tag
   parameter-store:
     DOCKERHUB_USERNAME: /prx/DOCKERHUB_USERNAME
     DOCKERHUB_PASSWORD: /prx/DOCKERHUB_PASSWORD
   exported-variables:
-    - PRX_ECR_CONFIG_PARAMETERS
     - PRX_SPIRE_SSM_PARAMETERS_ECR_TAG
     - PRX_ECR_IMAGE
 phases:
