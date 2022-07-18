@@ -2,9 +2,8 @@ FROM ekidd/rust-musl-builder:stable as builder
 ADD --chown=rust:rust . ./
 RUN cargo build --release
 
-
 FROM alpine:latest
-LABEL org.prx.app="yes"
+LABEL org.prx.spire.publish.ecr="WEB_SERVER"
 EXPOSE 3000
 
 RUN apk update \
