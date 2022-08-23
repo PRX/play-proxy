@@ -5,3 +5,4 @@ Creates an HTTP server intended to handle requests with a `url` query parameter.
 The server makes a GET request to the `url` provided, and responds with the body content of that request, in order to proxy the contents. Headers/etc are not proxies.
 
 You can build the program with `cargo build`, and then run it locally with `cd target/debug && ./play_proxy`.
+
